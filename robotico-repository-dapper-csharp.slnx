@@ -3,4 +3,7 @@
   <Folder Name="/src/">
     <Project Path="src/Robotico.Repository.Dapper/Robotico.Repository.Dapper.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Robotico.Repository.Dapper.Tests/Robotico.Repository.Dapper.Tests.csproj" />
+  </Folder>
 </Solution>
