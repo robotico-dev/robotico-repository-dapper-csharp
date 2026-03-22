@@ -6,4 +6,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/Robotico.Repository.Dapper.Tests/Robotico.Repository.Dapper.Tests.csproj" />
   </Folder>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/Robotico.Repository.Dapper.Benchmarks/Robotico.Repository.Dapper.Benchmarks.csproj" />
+  </Folder>
 </Solution>

@@ -1,6 +1,5 @@
 using System.Data.Common;
-using Robotico.Repository;
-using Robotico.Result;
+using System.Diagnostics.CodeAnalysis;
 using Robotico.Result.Errors;
 
 namespace Robotico.Repository.Dapper;
@@ -11,7 +10,8 @@ namespace Robotico.Repository.Dapper;
 /// <remarks>
 /// <para>Call <see cref="BeginTransaction"/> before using repositories that use <see cref="Connection"/> and <see cref="Transaction"/>. Call <see cref="IUnitOfWork.CommitAsync"/> to commit.</para>
 /// </remarks>
-public sealed class DapperUnitOfWork : IUnitOfWork
+[SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Commit maps any provider failure to Result.Error(ExceptionError).")]
+public sealed class DapperUnitOfWork : Robotico.Repository.IUnitOfWork
 {
     private DbTransaction? _transaction;
 

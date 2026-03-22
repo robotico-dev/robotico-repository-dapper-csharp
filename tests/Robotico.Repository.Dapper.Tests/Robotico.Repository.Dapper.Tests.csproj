@@ -7,8 +7,15 @@
     <IsTestProject>true</IsTestProject>
     <NoWarn>$(NoWarn);CA1707;CA1515;CA2007;IDE0005</NoWarn>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="CsCheck" />
+    <PackageReference Include="coverlet.collector">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Data.Sqlite" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />

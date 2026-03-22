@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Robotico.Repository.Dapper.Benchmarks</RootNamespace>
+    <AssemblyName>Robotico.Repository.Dapper.Benchmarks</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>true</ImplicitUsings>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <PackageId>Robotico.Repository.Dapper.Benchmarks</PackageId>
+    <NoWarn>$(NoWarn);CA1707;CA1515;CA1822;IDE0005</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Robotico.Repository.Dapper\Robotico.Repository.Dapper.csproj" />
+  </ItemGroup>
+
+</Project>
