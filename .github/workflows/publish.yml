@@ -43,15 +43,20 @@ jobs:
         run: |
           dotnet test tests/Robotico.Repository.Dapper.Tests/Robotico.Repository.Dapper.Tests.csproj --no-build -c Release --verbosity normal \
             --collect:"XPlat Code Coverage" --results-directory ./coverage
-      - name: Check coverage threshold (80% line)
+      - name: Check coverage threshold (90% line)
         run: |
-          COV_FILE=$(find ./coverage -name coverage.cobertura.xml 2>/dev/null | head -1)
-          if [ -z "$COV_FILE" ]; then echo "No coverage file found"; exit 1; fi
-          RATE=$(sed -n 's/.*line-rate="\([^"]*\)".*/\1/p' "$COV_FILE" | head -1)
-          if [ -z "$RATE" ]; then echo "Could not parse line-rate"; exit 1; fi
-          PERCENT=$(echo "$RATE * 100" | bc)
-          echo "Line coverage: ${PERCENT}%"
-          if [ "$(echo "$RATE < 0.80" | bc)" -eq 1 ]; then echo "Coverage ${PERCENT}% is below 80%"; exit 1; fi
+          set -euo pipefail
+          mapfile -d '' COV_FILES < <(find ./coverage -name coverage.cobertura.xml -print0 2>/dev/null)
+          if [ "${#COV_FILES[@]}" -eq 0 ]; then echo "No coverage file found"; exit 1; fi
+          MAX_RATE=0
+          for f in "${COV_FILES[@]}"; do
+            R=$(grep -Eo 'line-rate="[0-9.]+"' "$f" | head -1 | cut -d'"' -f2)
+            if [ -z "$R" ]; then echo "Could not parse line-rate in $f"; exit 1; fi
+            if [ "$(echo "$R > $MAX_RATE" | bc)" -eq 1 ]; then MAX_RATE=$R; fi
+          done
+          PERCENT=$(echo "$MAX_RATE * 100" | bc)
+          echo "Line coverage (max across Cobertura files): ${PERCENT}%"
+          if [ "$(echo "$MAX_RATE < 0.90" | bc)" -eq 1 ]; then echo "Coverage ${PERCENT}% is below 90%"; exit 1; fi
       - name: Upload coverage (main/PR)
         uses: codecov/codecov-action@v4
         if: matrix.dotnet-version == '10.0.x' && (github.event_name == 'push' || github.event_name == 'pull_request')
