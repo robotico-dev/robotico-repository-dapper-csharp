@@ -166,7 +166,7 @@ public sealed class DapperAdapterCoverageTests
         using SqliteConnection connection = DapperRepositoryTestsSqlite.CreateConnection();
         DapperUnitOfWork uow = new(connection);
         uow.BeginTransaction();
-        uow.Transaction!.Rollback();
+        await uow.Transaction!.RollbackAsync();
 
         Robotico.Result.Result result = await uow.CommitAsync();
 
@@ -238,8 +238,8 @@ public sealed class DapperAdapterCoverageTests
     [Fact]
     public void IsDuplicateKey_true_from_inner_exception_message()
     {
-        Exception inner = new("duplicate key");
-        Assert.True(DapperDuplicateKeyExceptionInspector.IsDuplicateKey(new Exception("outer", inner)));
+        InvalidOperationException inner = new("duplicate key");
+        Assert.True(DapperDuplicateKeyExceptionInspector.IsDuplicateKey(new InvalidOperationException("outer", inner)));
     }
 
     [Fact]
@@ -252,7 +252,7 @@ public sealed class DapperAdapterCoverageTests
     [Fact]
     public void IsDuplicateKey_false_for_unrelated_exception()
     {
-        Assert.False(DapperDuplicateKeyExceptionInspector.IsDuplicateKey(new Exception("timeout expired")));
+        Assert.False(DapperDuplicateKeyExceptionInspector.IsDuplicateKey(new InvalidOperationException("timeout expired")));
     }
 
     [Fact]
