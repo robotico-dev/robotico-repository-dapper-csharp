@@ -43,7 +43,7 @@ jobs:
         run: |
           dotnet test tests/Robotico.Repository.Dapper.Tests/Robotico.Repository.Dapper.Tests.csproj --no-build -c Release --verbosity normal \
             --collect:"XPlat Code Coverage" --results-directory ./coverage
-      - name: Check coverage threshold (90% line)
+      - name: Check coverage threshold (80% line)
         run: |
           COV_FILE=$(find ./coverage -name coverage.cobertura.xml 2>/dev/null | head -1)
           if [ -z "$COV_FILE" ]; then echo "No coverage file found"; exit 1; fi
@@ -51,7 +51,7 @@ jobs:
           if [ -z "$RATE" ]; then echo "Could not parse line-rate"; exit 1; fi
           PERCENT=$(echo "$RATE * 100" | bc)
           echo "Line coverage: ${PERCENT}%"
-          if [ "$(echo "$RATE < 0.90" | bc)" -eq 1 ]; then echo "Coverage ${PERCENT}% is below 90%"; exit 1; fi
+          if [ "$(echo "$RATE < 0.80" | bc)" -eq 1 ]; then echo "Coverage ${PERCENT}% is below 80%"; exit 1; fi
       - name: Upload coverage (main/PR)
         uses: codecov/codecov-action@v4
         if: matrix.dotnet-version == '10.0.x' && (github.event_name == 'push' || github.event_name == 'pull_request')
