@@ -11,9 +11,17 @@ namespace Robotico.Repository.Dapper;
 /// <para>Call <see cref="BeginTransaction"/> before using repositories that use <see cref="Connection"/> and <see cref="Transaction"/>. Call <see cref="IUnitOfWork.CommitAsync"/> to commit.</para>
 /// </remarks>
 [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Commit maps any provider failure to Result.Error(ExceptionError).")]
-public sealed class DapperUnitOfWork : Robotico.Repository.IUnitOfWork
+public sealed class DapperUnitOfWork : Robotico.Repository.IUnitOfWork, IUnitOfWorkCapabilities
 {
+    private static readonly UnitOfWorkProfile UnitOfWorkProfileValue = new(
+        UnitOfWorkCommitMode.DeferredUntilCommit,
+        CommitCoordinatesDomainWrites: true,
+        SupportsTransactions: true);
+
     private DbTransaction? _transaction;
+
+    /// <inheritdoc />
+    public UnitOfWorkProfile Capabilities => UnitOfWorkProfileValue;
 
     /// <summary>
     /// Gets the connection to use for repository operations.

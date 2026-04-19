@@ -17,7 +17,7 @@ namespace Robotico.Repository.Dapper;
 /// <typeparam name="TEntity">The entity type (must implement <see cref="IEntity{TId}"/> and be a reference type).</typeparam>
 /// <typeparam name="TId">The type of the entity identifier.</typeparam>
 [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Dapper maps any database/runtime failure to Result.Error(ExceptionError); duplicate key is classified separately on Add.")]
-public sealed class DapperRepository<TEntity, TId>(IDbConnection connection, IDbTransaction? transaction = null, string? tableName = null, string idColumnName = "Id") : Robotico.Repository.IRepository<TEntity, TId>
+public sealed class DapperRepository<TEntity, TId>(IDbConnection connection, IDbTransaction? transaction = null, string? tableName = null, string idColumnName = "Id") : Robotico.Repository.IRepository<TEntity, TId>, Robotico.Repository.IAsyncRepository<TEntity, TId>
     where TEntity : class, IEntity<TId>
     where TId : notnull
 {
@@ -92,6 +92,81 @@ public sealed class DapperRepository<TEntity, TId>(IDbConnection connection, IDb
         {
             string sql = $"DELETE FROM [{_tableName}] WHERE [{idColumnName}] = @Id";
             int rows = connection.Execute(sql, new { entity.Id }, transaction);
+            return rows > 0
+                ? Robotico.Result.Result.Success()
+                : Robotico.Result.Result.Error(new SimpleError($"Entity with id '{entity.Id}' not found.", "NOT_FOUND"));
+        }
+        catch (Exception ex)
+        {
+            return Robotico.Result.Result.Error(new ExceptionError(ex));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Robotico.Result.Result<TEntity>> GetByIdAsync(TId id, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        try
+        {
+            string sql = $"SELECT * FROM [{_tableName}] WHERE [{idColumnName}] = @Id";
+            TEntity? entity = await connection.QueryFirstOrDefaultAsync<TEntity>(
+                new CommandDefinition(sql, new { Id = id }, transaction, cancellationToken: cancellationToken)).ConfigureAwait(false);
+            return entity is null
+                ? Robotico.Result.Result.Error<TEntity>(new SimpleError($"Entity with id '{id}' not found.", "NOT_FOUND"))
+                : Robotico.Result.Result.Success(entity);
+        }
+        catch (Exception ex)
+        {
+            return Robotico.Result.Result.Error<TEntity>(new ExceptionError(ex));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Robotico.Result.Result> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entity);
+        try
+        {
+            string sql = _persistenceMetadata.BuildInsertSql(_tableName);
+            await connection.ExecuteAsync(new CommandDefinition(sql, entity, transaction, cancellationToken: cancellationToken)).ConfigureAwait(false);
+            return Robotico.Result.Result.Success();
+        }
+        catch (Exception ex) when (DapperDuplicateKeyExceptionInspector.IsDuplicateKey(ex))
+        {
+            return Robotico.Result.Result.Error(new SimpleError($"Entity with id '{entity.Id}' already exists.", "DUPLICATE"));
+        }
+        catch (Exception ex)
+        {
+            return Robotico.Result.Result.Error(new ExceptionError(ex));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Robotico.Result.Result> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entity);
+        try
+        {
+            string sql = _persistenceMetadata.BuildUpdateSql(_tableName, idColumnName);
+            int rows = await connection.ExecuteAsync(new CommandDefinition(sql, entity, transaction, cancellationToken: cancellationToken)).ConfigureAwait(false);
+            return rows > 0
+                ? Robotico.Result.Result.Success()
+                : Robotico.Result.Result.Error(new SimpleError($"Entity with id '{entity.Id}' not found.", "NOT_FOUND"));
+        }
+        catch (Exception ex)
+        {
+            return Robotico.Result.Result.Error(new ExceptionError(ex));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Robotico.Result.Result> RemoveAsync(TEntity entity, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(entity);
+        try
+        {
+            string sql = $"DELETE FROM [{_tableName}] WHERE [{idColumnName}] = @Id";
+            int rows = await connection.ExecuteAsync(new CommandDefinition(sql, new { entity.Id }, transaction, cancellationToken: cancellationToken)).ConfigureAwait(false);
             return rows > 0
                 ? Robotico.Result.Result.Success()
                 : Robotico.Result.Result.Error(new SimpleError($"Entity with id '{entity.Id}' not found.", "NOT_FOUND"));
